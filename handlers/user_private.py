@@ -10,6 +10,7 @@ from keyboards.reply import get_keyboard
 user_private_router = Router()
 
 
+# noinspection PyTypeChecker
 @user_private_router.message(CommandStart())
 async def start_cmd(message: types.Message):
     await message.answer(
@@ -28,6 +29,7 @@ async def start_cmd(message: types.Message):
     )
 
 
+# noinspection PyTypeChecker
 class Form(StatesGroup):
     age = State()
     gender = State()
@@ -36,7 +38,6 @@ class Form(StatesGroup):
     purpose = State()
     WaitingForYesNo = State()
     image = State()
-    NoImage = State()
     contact = State()
 
     texts = {
@@ -45,11 +46,47 @@ class Form(StatesGroup):
         'Form:name': 'Введите имя заново:',
         'Form:city': 'Введите город заново:',
         'Form:purpose': 'Выберите цель заново:',
-        'Form:image': 'Добавьте фото заново:',
+        'Form:image': 'Хотите добавить фото?',
         'Form:contact': 'Оставьте контакт заново:',
+    }
+    keyboards = {
+        'Form:age': get_keyboard("Отмена",
+                                 placeholder="Выберите 'отмена' или введите возраст",
+                                 sizes=(1,)),
+        'Form:gender': get_keyboard("Мужской",
+                                    "Женский",
+                                    "Отмена",
+                                    "Предыдущий вопрос",
+                                    placeholder="Выберите пол",
+                                    sizes=(2, 1)),
+        'Form:name': get_keyboard("Отмена",
+                                  "Предыдущий вопрос",
+                                  placeholder="Введи имя",
+                                  sizes=(1,)),
+        'Form:city': get_keyboard("Отмена",
+                                  "Предыдущий вопрос",
+                                  placeholder="Введи город",
+                                  sizes=(1,)),
+        'Form:purpose': get_keyboard("поиск отношений",
+                                     "просто общение",
+                                     "Отмена",
+                                     "Предыдущий вопрос",
+                                     placeholder="Выбери вариант ответа",
+                                     sizes=(2, 1)),
+        'Form:image': get_keyboard("Да",
+                                   "Нет",
+                                   "Отмена",
+                                   "Предыдущий вопрос",
+                                   placeholder="Выбери вариант ответа",
+                                   sizes=(2, 1)),
+        'Form;content': get_keyboard("Отмена",
+                                     "Предыдущий вопрос",
+                                     placeholder="Оставь контакт для связи",
+                                     sizes=(1,)),
     }
 
 
+# noinspection PyTypeChecker
 @user_private_router.message(StateFilter(None),
                              or_f(Command('create-form'), F.text.lower().contains("создать анкету")))
 async def create_form(message: types.Message, state: FSMContext):
@@ -63,6 +100,7 @@ async def create_form(message: types.Message, state: FSMContext):
     await state.set_state(Form.age)
 
 
+# noinspection PyTypeChecker
 @user_private_router.message(StateFilter('*'), Command("отмена"))
 @user_private_router.message(StateFilter('*'), F.text.casefold() == "отмена")
 async def cancel_handler(message: types.Message, state: FSMContext) -> None:
@@ -89,13 +127,16 @@ async def back_step_handler(message: types.Message, state: FSMContext) -> None:
     previous = None
     for step in Form.__all_states__:
         if step.state == current_state:
-            await state.set_state(previous)
-            await message.answer(f"Ок, вы вернулись к предыдущему вопросу \n {Form.texts[previous.state]}")
-            return
+            if previous is not None:
+                await state.set_state(previous)
+                question_text = Form.texts.get(previous.state, "Вопрос не найден.")
+                keyboard = Form.keyboards.get(previous.state)
+                await message.answer(f"Ок, вы вернулись к предыдущему вопросу \n {Form.texts[previous.state]}",
+                                     reply_markup=keyboard)
+                return
         previous = step
 
 
-# Работает, но при переходе на предыдущий вопрос, кнопки не меняются
 
 # noinspection PyTypeChecker
 @user_private_router.message(Form.age, F.text)
@@ -121,6 +162,7 @@ async def add_age2(message: types.Message, state: FSMContext):
     await message.answer("Вы ввели неправильные данные, введите возраст.")
 
 
+# noinspection PyTypeChecker
 @user_private_router.message(Form.gender, F.text)
 async def add_gender(message: types.Message, state: FSMContext):
     await state.update_data(gender=message.text)
@@ -137,6 +179,7 @@ async def add_gender2(message: types.Message, state: FSMContext):
     await message.answer("Вводить ничего не нужно, просто выберите пол")
 
 
+# noinspection PyTypeChecker
 @user_private_router.message(Form.name, F.text)
 async def add_name(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
@@ -145,7 +188,7 @@ async def add_name(message: types.Message, state: FSMContext):
         "Предыдущий вопрос",
         placeholder="Введи город",
         sizes=(1,)))
-    await state.set_state(Form.city)  # на 4 вопросе не появляются кнопки, надо разобраться
+    await state.set_state(Form.city)
 
 
 @user_private_router.message(Form.name)  # если кто-то решит фото отправить на вопрос об имени
@@ -186,6 +229,7 @@ async def question(message: types.Message, state: FSMContext):
     await state.set_state(Form.WaitingForYesNo)
 
 
+# noinspection PyTypeChecker
 @user_private_router.message(Form.WaitingForYesNo, F.text)
 async def process_yes_no(message: types.Message, state: FSMContext):
     if message.text.lower() == "да":
@@ -204,6 +248,7 @@ async def process_yes_no(message: types.Message, state: FSMContext):
         await message.answer("Пожалуйста, выберите Да или Нет")
 
 
+# noinspection PyTypeChecker
 @user_private_router.message(Form.image, F.photo)
 async def add_image(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
@@ -226,7 +271,8 @@ async def add_image(message: types.Message, state: FSMContext):
         await message.answer("Уже загружено максимальное количество фото.")
 
 
-@user_private_router.message (or_f(Command("skip"), F.text.lower().contains("skip")), Form.image)
+# noinspection PyTypeChecker
+@user_private_router.message(or_f(Command("skip"), F.text.lower().contains("skip")), Form.image)
 async def skip_image_upload(message: types.Message, state: FSMContext):
     await message.answer("Добавление фото пропущено.")
     await message.answer("Можете оставить свои контакты для связи?", reply_markup=get_keyboard(
