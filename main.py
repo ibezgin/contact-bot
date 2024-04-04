@@ -1,23 +1,25 @@
 import asyncio
+import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
 
-from middlewares.db import CounterMiddleware
-from handlers.user_private import user_private_router
+from handlers import router
 
-TOKEN = "6521597625:AAGnXGtc4s7UHnjheO3PpjAeD2CjQTgDCJ0"
-bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 
+
+Token = ("6993268838:AAHzVnZCRqBD5s1cIrCbqky3WqEI40d8-UU")
+bot = Bot(token=Token)
 dp = Dispatcher()
 
-user_private_router.message.middleware(CounterMiddleware())
-
-dp.include_router(user_private_router)
 
 
 async def main():
+    dp.include_router(router)
     await dp.start_polling(bot)
 
-
-asyncio.run(main())
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Exit")
