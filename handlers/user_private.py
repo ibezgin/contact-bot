@@ -1,10 +1,12 @@
 import re
 
 from aiogram import F, Router, types
-from aiogram.filters import Command, StateFilter, CommandStart, or_f, state
+from aiogram.filters import Command, StateFilter, CommandStart, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, callback_query
 
+from keyboards.inline import get_callback_btns
 from keyboards.reply import get_keyboard
 
 user_private_router = Router()
@@ -46,7 +48,8 @@ class Form(StatesGroup):
         'Form:name': 'Введите имя заново:',
         'Form:city': 'Введите город заново:',
         'Form:purpose': 'Выберите цель заново:',
-        'Form:image': 'Хотите добавить фото?',
+        'Form:WaitingForYesNo': 'Хотите добавить фото?',
+        'Form:image': 'Добавьте фото',
         'Form:contact': 'Оставьте контакт заново:',
     }
     keyboards = {
@@ -73,13 +76,17 @@ class Form(StatesGroup):
                                      "Предыдущий вопрос",
                                      placeholder="Выбери вариант ответа",
                                      sizes=(2, 1)),
-        'Form:image': get_keyboard("Да",
-                                   "Нет",
-                                   "Отмена",
+        'Form:WaitingForYesNo': get_keyboard("Да",
+                                             "Нет",
+                                             "Отмена",
+                                             "Предыдущий вопрос",
+                                             placeholder="Выбери вариант ответа",
+                                             sizes=(2, 1)),
+        'Form:image': get_keyboard("Отмена",
                                    "Предыдущий вопрос",
-                                   placeholder="Выбери вариант ответа",
+                                   placeholder="Добавьте фото",
                                    sizes=(2, 1)),
-        'Form;content': get_keyboard("Отмена",
+        'Form:contact': get_keyboard("Отмена",
                                      "Предыдущий вопрос",
                                      placeholder="Оставь контакт для связи",
                                      sizes=(1,)),
@@ -135,7 +142,6 @@ async def back_step_handler(message: types.Message, state: FSMContext) -> None:
                                      reply_markup=keyboard)
                 return
         previous = step
-
 
 
 # noinspection PyTypeChecker
@@ -233,7 +239,10 @@ async def question(message: types.Message, state: FSMContext):
 @user_private_router.message(Form.WaitingForYesNo, F.text)
 async def process_yes_no(message: types.Message, state: FSMContext):
     if message.text.lower() == "да":
-        await message.answer("Добавьте фото(до 3)")
+        await message.answer("Добавьте фото(до 3)", reply_markup=get_keyboard(
+            "Отмена",
+            placeholder="Добавь фото",
+            sizes=(1,)))
         await state.set_state(Form.image)
     elif message.text.lower() == "нет":
         await state.update_data(image=message.text)
