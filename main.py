@@ -7,7 +7,7 @@ from handlers import router
 
 
 
-Token = ("Здесь должен быть ваш токен")
+Token = ("Тут должен быть ваш токен")
 bot = Bot(token=Token)
 dp = Dispatcher()
 

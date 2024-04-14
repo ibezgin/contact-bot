@@ -23,3 +23,17 @@ city = ReplyKeyboardMarkup(keyboard=[
     resize_keyboard=True,
     input_field_placeholder="Введите город или выберите вариант 'Всё равно'",
     one_time_keyboard=True)
+
+further = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text="Продолжить"), KeyboardButton(text="/stop")]
+],
+    resize_keyboard=True,
+    input_field_placeholder="Выберите вариант",
+    one_time_keyboard=True)
+
+like_or_dislike = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text="Лайк"), KeyboardButton(text="Дизлайк")]
+],
+    resize_keyboard=True,
+    input_field_placeholder="Выберите возраст",
+    one_time_keyboard=True)
