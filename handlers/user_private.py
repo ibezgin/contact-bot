@@ -341,7 +341,8 @@ async def add_purpose2(message: types.Message, state: FSMContext):
 @user_private_router.message(Form.contact, F.text)
 async def add_contact(message: types.Message, state: FSMContext):
     await state.update_data(contact=message.text)
-    await message.answer("Готово! Начнём искать собеседника?", reply_markup=get_keyboard(
+    await message.answer("Твоя анкета готова! Получилось неплохо. Тебе нравится?😍\n"
+                         "Анкету всегда можно будет отредактировать. Не переживай😉", reply_markup=get_keyboard(
         "Поиск собеседника",
         "Редактировать анкету",
         "Предыдущий вопрос",
@@ -352,7 +353,7 @@ async def add_contact(message: types.Message, state: FSMContext):
     if 'uploaded_images' in data and data['uploaded_images']:
         images_info = ', '.join(data['uploaded_images'])
     profile_info = (
-        "Ваша анкета:\n"
+        "Твоя анкета:\n"
         f"Имя: {data['name']}\n"
         f"Возраст: {data['age']}\n"
         f"Город: {data['city']}\n"
